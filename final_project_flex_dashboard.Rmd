@@ -11,6 +11,8 @@ library(flexdashboard)
 library(readr) #chang
 library(tidyverse)
 library(dplyr)
+library(DT)
+plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
 ```
 
 Column {data-width=650}
@@ -43,7 +45,7 @@ plastic_companies <- plastics %>%
   slice(1:20) %>%
   rename(Company = parent_company) %>%
   rename(Total = ggrand) %>%
-  datatable(options = list(pagelength = 12), caption = "Collected Total Pieces of Plastic Pollution per Company in 2019")
+  datatable(options = list(pagelength = 12), caption = "Total Collected Pieces of Plastic Pollution per Top 20 Companies in 2019")
 plastic_companies
 ```
 
