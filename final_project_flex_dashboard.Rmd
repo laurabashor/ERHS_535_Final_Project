@@ -8,6 +8,8 @@ output:
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
+library(readr)
+library(tidyverse)
 ```
 
 Column {data-width=650}
