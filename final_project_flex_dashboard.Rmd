@@ -8,7 +8,7 @@ output:
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
-library(readr) #load library
+library(readr) #change
 library(tidyverse)
 ```
 
