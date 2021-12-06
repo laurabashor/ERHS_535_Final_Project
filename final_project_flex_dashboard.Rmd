@@ -39,31 +39,24 @@ Column {data-width=350}
 
 ```{r}
 plastic_companies <- plastics %>%
-  filter(year == "2019") %>%
-  select(parent_company, grand_total) %>%
+  select(year, parent_company, grand_total) %>%
+  #filter(year == "2019") %>%
   filter(parent_company != "Grand Total") %>%
   filter(parent_company != "null") %>%
   filter(parent_company != "NULL") %>%
   filter(parent_company != "Unbranded") %>%
   na.omit() %>%
-  group_by(parent_company) %>%
+  group_by(year, parent_company) %>%
   summarise(ggrand = sum(grand_total)) %>%
   arrange(desc(ggrand)) %>%
   ungroup() %>%
-  slice(1:20) %>%
   rename(Company = parent_company) %>%
   rename(Total = ggrand) %>%
+  pivot_wider(id_cols = "Company",
+              names_from = "year",
+              values_from = "Total") %>%
   datatable(options = list(pagelength = 12), caption = "Total Collected Pieces of Plastic Pollution per Top 20 Companies in 2019")
 plastic_companies
-
-
-#make column for 2019 and 2020 and difference
-#coord_sf
-#index
-#copy 
-
-
-
 ```
 
 ### Chart C
