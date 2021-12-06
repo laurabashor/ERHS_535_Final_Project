@@ -79,7 +79,7 @@ Column {data-width=650}
 Column {data-width=350}
 -----------------------------------------------------------------------
 
-### Chart B
+### Plastic Pollution by Company
 
 ```{r}
 plastic_companies <- plastics %>%
