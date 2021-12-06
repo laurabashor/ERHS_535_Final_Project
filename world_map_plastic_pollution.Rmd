@@ -47,6 +47,8 @@ plastic_pollution_cleaned <- plastic_pollution %>%
 world_map <- map_data("world") %>%
   rename(country = region)
 
+class(world_map)
+
 ## merge data
 
 plastic_pollution_map <- right_join(plastic_pollution_cleaned, world_map, by = "country")
@@ -56,8 +58,10 @@ head(plastic_pollution_map)
 # plot data
 
 ggplot(plastic_pollution_map, aes(long, lat, group = group))+
-  geom_polygon(aes(fill = plastic_waste_total ), color = "black")+
-  scale_fill_viridis_c()
+  geom_polygon(aes(fill = plastic_waste_total), color = "black")+
+  scale_fill_viridis_c() +
+  theme_classic() +
+  theme(legend.position = "bottom")
 ```
 
 
