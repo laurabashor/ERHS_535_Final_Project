@@ -1,0 +1,67 @@
+---
+title: "plastic pollution"
+author: "Taru Dutt"
+date: "12/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## load libraries
+
+```{r}
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(sf)
+library(leaflet)
+library(dplyr)
+```
+
+## load data
+
+```{r}
+plastic_pollution <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
+
+```
+
+## clean data
+
+```{r}
+## take out only columns for country, year and grand total
+
+plastic_pollution_cleaned <- plastic_pollution %>%
+  filter(parent_company == "Grand Total") %>%
+  filter(year == "2019") %>%
+  select(c("country", "grand_total")) %>%
+  mutate(country = str_to_title(country)) %>%
+  rename(plastic_waste_total = grand_total)
+
+```
+
+## plot map
+
+```{r}
+world_map <- map_data("world") %>%
+  rename(country = region)
+
+## merge data
+
+plastic_pollution_map <- right_join(plastic_pollution_cleaned, world_map, by = "country")
+
+head(plastic_pollution_map)
+
+# plot data
+
+ggplot(plastic_pollution_map, aes(long, lat, group = group))+
+  geom_polygon(aes(fill = plastic_waste_total ), color = "black")+
+  scale_fill_viridis_c()
+```
+
+
+```{r}
+
+```
+
