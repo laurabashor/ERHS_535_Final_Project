@@ -16,7 +16,7 @@ plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/t
 ```
 
 
-```{r, echo = FALSE}
+```{r}
 plastics <- plastics %>%
   mutate(count_per_volunteer = (grand_total / volunteers)) %>%
   mutate(country = str_to_title(country))
