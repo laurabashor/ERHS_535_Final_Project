@@ -4,6 +4,7 @@ library(readr)
 library(tidyverse)
 library(sf)
 library(plotly)
+library(leaflet)
 
 plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
 
@@ -69,3 +70,37 @@ p <- pollution_change %>%
   theme(legend.position = "none")
 
 p
+
+
+#let's look at plastic types
+
+plastics_long_2019 <- plastics %>%
+  filter(year == "2019") %>%
+  filter(parent_company != "Grand Total") %>%
+  select(!empty) %>%
+  pivot_longer(!c(country, year, parent_company, num_events, volunteers), 
+               names_to = "plastic_type", values_to = "count") %>%
+  filter(plastic_type != "grand_total") %>%
+  na.omit()
+  
+ggplot(plastics_long_2019) +
+  geom_bar(aes(x= reorder(plastic_type, count), 
+                 y=count), 
+               stat = "identity") +
+  labs(x= "", y = "") +
+  theme_classic() +
+  coord_flip()
+
+
+#get some lat long data for countries
+
+countries <- read_csv("/Users/_lbashor/Dropbox/SARS-CoV-2 cat manuscript/cat ms results/R analysis cats/felid_phylogeny_R/countries.csv") %>%
+  rename(country = Country)
+
+plastics_mapping %>%
+  group_by(country) %>%
+  
+plastics_long_2019 %>%
+  full_join(countries, by = "country") %>%
+  pull(country) %>%
+  unique()
