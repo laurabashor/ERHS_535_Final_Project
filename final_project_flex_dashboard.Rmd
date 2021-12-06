@@ -47,8 +47,6 @@ plastic_companies <- plastics %>%
   rename(Total = ggrand) %>%
   datatable(options = list(pagelength = 12), caption = "Total Collected Pieces of Plastic Pollution per Top 20 Companies in 2019")
 plastic_companies
-
-#make column for 2019 and 2020 and difference
 ```
 
 ### Chart C
