@@ -72,8 +72,9 @@ Row {.tabset .tabset-fade}
 
 ### World map of pollution 
 
-```{r}
+$count per volunteer = \frac{plastic count}{number of volunteers}$
 
+```{r}
 ```
 
 
