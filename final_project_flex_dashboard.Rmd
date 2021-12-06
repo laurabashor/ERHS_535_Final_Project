@@ -16,7 +16,7 @@ plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/t
 ```
 
 
-```{r, echo = FALSE, eval = FALSE}
+```{r, echo = FALSE}
 plastics <- plastics %>%
   mutate(count_per_volunteer = (grand_total / volunteers)) %>%
   mutate(country = str_to_title(country))
@@ -67,16 +67,16 @@ plastics_long <- plastics %>%
 
 ```
 
-Column {data-width=650}
+Row {.tabset .tabset-fade}
 -----------------------------------------------------------------------
 
-### Chart A
+### World map of pollution 
 
 ```{r}
 
 ```
 
-Column {data-width=350}
+
 -----------------------------------------------------------------------
 
 ### Chart B
@@ -103,10 +103,7 @@ plastic_companies <- plastics %>%
 plastic_companies
 ```
 
-Row {.tabset .tabset-fade}
--------------------------------------
-
-### Chart C
+### Change in pollution from 2019-2020 by country
 
 ```{r}
 p <- pollution_change %>%
@@ -125,7 +122,7 @@ p <- pollution_change %>%
 p
 ```
 
-### Chart D
+### Change in pollution from 2019-2020 by plastic type
 
 ```{r}
 p2 <- ggplot(plastics_long) +
