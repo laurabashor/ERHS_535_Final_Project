@@ -15,9 +15,8 @@ library(DT)
 plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
 ```
 
-### Master Code
 
-```{r}
+```{r, echo = FALSE, eval = FALSE}
 plastics <- plastics %>%
   mutate(count_per_volunteer = (grand_total / volunteers)) %>%
   mutate(country = str_to_title(country))
