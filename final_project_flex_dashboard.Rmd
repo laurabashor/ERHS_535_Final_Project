@@ -103,7 +103,7 @@ plastic_companies <- plastics %>%
 plastic_companies
 ```
 
-### Change in pollution from 2019-2020
+### Change in pollution from 2019-2020 by country
 
 ```{r}
 p <- pollution_change %>%
@@ -111,7 +111,7 @@ p <- pollution_change %>%
   geom_point(aes(x = difference, 
                  y = reorder(country, difference),
                  color = color)) +
-  scale_color_brewer(palette = "Paired") +
+  scale_color_brewer(palette = "Pastel1") +
   # scale_color_manual(values = c("orange", "blue")) +
   geom_segment(aes(y = country, yend = country,
                    x = 0, xend = difference)) +
