@@ -175,7 +175,7 @@ plastic_companies <- plastics %>%
 plastic_companies
 ```
 
-### Change in plastic pollution from 2019-2020
+### Change in plastic pollution from 2019 to 2020
 
 ```{r}
 p <- pollution_change %>%
