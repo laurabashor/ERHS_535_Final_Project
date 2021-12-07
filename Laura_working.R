@@ -13,6 +13,7 @@ str(plastics)
 head(plastics)
 
 plastics %>%
+  filter(year == "2019") %>%
   pull(country) %>%
   unique() %>%
   length()

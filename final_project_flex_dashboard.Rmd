@@ -4,7 +4,7 @@ output:
   flexdashboard::flex_dashboard:
     theme: 
       version: 4
-      bootswatch: superhero
+      bootswatch: journal
     orientation: columns
     vertical_layout: fill
 ---
@@ -16,13 +16,13 @@ library(tidyverse)
 library(dplyr)
 library(DT)
 library(cowplot)
-library(plotly)
+library(sf)
 
 plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
 ```
 
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, include = FALSE}
 plastics <- plastics %>%
   mutate(count_per_volunteer = (grand_total / volunteers)) %>% #normalize plastic totals by the number of volunteers
   select(!empty) %>% #don't need this column-- it's meaning is unclear
@@ -31,6 +31,34 @@ plastics <- plastics %>%
 
 #UK has two different names, fix this
 plastics["country"][plastics["country"] == "United Kingdom Of Great Britain & Northern Ireland"] <- "United Kingdom"
+
+#clean up data for mapping (Taru)
+plastic_pollution_cleaned <- plastics %>%
+  filter(year == "2019") %>%
+  group_by(country, year, volunteers) %>%
+  summarize(total = sum(grand_total)) %>%
+  mutate(plastic_waste_total = sum(total), 
+         total_per_volunteer = total/volunteers) %>%
+  select(c("country", "total_per_volunteer", "plastic_waste_total"))
+
+world_map <- map_data("world") %>%
+  rename(country = region)
+
+plastic_pollution_cleaned %>%
+  anti_join(world_map, by = "country") %>%
+  pull(country)
+#these countries are in our plastic pollution dataset, but named differently in the world map
+
+#need to rename them
+world_map["country"][world_map["country"] == "USA"] <- "United States Of America"
+world_map["country"][world_map["subregion"] == "Hong Kong"] <- "Hong Kong"
+world_map["country"][world_map["country"] == "Ivory Coast"] <- "Cote D_ivoire"
+world_map["country"][world_map["country"] == "Taiwan"] <- "Taiwan_ Republic Of China (Roc)"
+world_map["country"][world_map["country"] == "UK"] <- "United Kingdom"
+
+plastic_pollution_map <- right_join(plastic_pollution_cleaned, 
+                                    world_map, 
+                                    by = "country")
 
 #what is the overall change in pollution from 2019-2020 by country 
 pollution_change <- plastics %>%
@@ -64,8 +92,7 @@ plastics_long <- plastics %>%
                                    "PVC" = "pvc",
                                    "Other" = "o"))
 
-#now we can do change 
-
+#now we can do change by plastic type
 plastic_type_change <- plastics_long %>%
   group_by(year, plastic_type) %>%
   summarize(total_per_volunteer = sum(count_per_volunteer)) %>%
@@ -78,14 +105,20 @@ plastic_type_change <- plastics_long %>%
 
 ```
 
+$count per volunteer = \frac{plastic count}{number of volunteers}$
+
 Row {.tabset .tabset-fade}
 -----------------------------------------------------------------------
 
-### World map of pollution 
-
-$count per volunteer = \frac{plastic count}{number of volunteers}$
+### World map of pollution
 
 ```{r}
+ggplot(plastic_pollution_map, aes(long, lat, group = group))+
+  geom_polygon(aes(fill = total_per_volunteer), color = "black")+
+  # scale_fill_viridis_c(na.value = "white") +
+  scale_fill_gradient(high ="red", low = "lightblue", na.value = "white") +
+  theme_classic() +
+  theme(legend.position = "bottom")
 ```
 
 
