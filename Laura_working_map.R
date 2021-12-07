@@ -67,4 +67,13 @@ ggplot() +
                       na.value = "white") +
   theme_classic() +
   theme(legend.position = "bottom")
+
+
+
+ggplot(plastic_pollution_map, aes(long, lat, group = group))+
+  geom_polygon(aes(fill = total_per_volunteer), color = "black")+
+  # scale_fill_viridis_c(na.value = "white") +
+  scale_fill_gradient(high ="red", low = "lightblue", na.value = "white") +
+  theme_classic() +
+  theme(legend.position = "bottom")
   
