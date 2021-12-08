@@ -103,9 +103,9 @@ plastic_type_change <- plastics %>%
   mutate(difference = (`2020` - `2019`))
 ```
 
-Text description here!
+Text description here! *Laura can do this
 Index of pollution: 
-$count per volunteer = \frac{plastic count}{number of volunteers}$
+$count per volunteer = \frac{ \mbox{ plastic count} {number of volunteers}$
 
 Row {.tabset .tabset-fade}
 -------------------------------------
