@@ -162,6 +162,7 @@ plastic_companies <- plastics %>%
   filter(parent_company != "null") %>%
   filter(parent_company != "NULL") %>%
   filter(parent_company != "Unbranded") %>%
+  filter(parent_company != "#ERROR!") %>%
   na.omit() %>%
   group_by(year, parent_company) %>%
   summarise(ggrand = sum(grand_total)) %>%
