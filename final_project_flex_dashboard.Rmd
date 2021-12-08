@@ -163,6 +163,8 @@ x <- plastics
 y <- plastics
 
 
+
+
 plastic_companies <- plastics %>%
   select(year, parent_company, grand_total) %>%
   filter(parent_company != "Grand Total") %>%
