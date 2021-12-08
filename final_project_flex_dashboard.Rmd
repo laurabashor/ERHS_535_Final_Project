@@ -8,6 +8,7 @@ output:
     orientation: columns
     vertical_layout: fill
 ---
+Plastic pollution data
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
@@ -158,6 +159,7 @@ plastic_pollution_cleaned %>%
 ```{r}
 plastic_companies <- plastics %>%
   select(year, parent_company, grand_total) %>%
+  filter(parent_company != "Grand Total") %>%
   #filter(year == "2019") %>%
   filter(parent_company != "null") %>%
   filter(parent_company != "NULL") %>%
