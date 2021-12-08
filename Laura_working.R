@@ -163,4 +163,3 @@ ggplot() +
 
 ## equation for pollution index
 ## scale_fill_log10
-
