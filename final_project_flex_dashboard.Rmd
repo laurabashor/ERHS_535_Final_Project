@@ -2,39 +2,70 @@
 title: "ERHS 535 Final Project"
 output: 
   flexdashboard::flex_dashboard:
+    theme: 
+      version: 4
+      bootswatch: journal
     orientation: columns
     vertical_layout: fill
 ---
+Plastic pollution data
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
-library(readr)
 library(tidyverse)
-library(dplyr)
 library(DT)
+library(cowplot)
+library(sf)
+library(maps)
+library(plotly)
+
 plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
 ```
 
 
-```{r}
+```{r, echo = FALSE, include = FALSE}
 plastics <- plastics %>%
-  mutate(count_per_volunteer = (grand_total / volunteers)) %>%
-  mutate(country = str_to_title(country))
+  mutate(count_per_volunteer = (grand_total / volunteers)) %>% #normalize plastic totals by the number of volunteers
+  select(!empty) %>% #don't need this column-- it's meaning is unclear
+  filter(parent_company != "Grand Total") %>% #we can calculate these totals ourselves, not in the company column
+  mutate(country = str_to_title(country)) #clean up country names 
 
-
-
-#UK has two different names
+#UK has two different names, fix this & fix all the other country names that conflict
 plastics["country"][plastics["country"] == "United Kingdom Of Great Britain & Northern Ireland"] <- "United Kingdom"
-
-#calculate total count of plastic per volunteer
-totals <- plastics %>%
-  filter(parent_company != "Grand Total") %>%
+plastics["country"][plastics["country"] == "United States Of America"] <- "USA"
+plastics["country"][plastics["country"] == "Cote D_ivoire"] <- "Ivory Coast"
+plastics["country"][plastics["country"] == "Taiwan_ Republic Of China (Roc)"] <- "Taiwan"
+plastics["country"][plastics["country"] == "United Kingdom"] <- "UK"
+  
+#clean up data for mapping
+plastic_pollution_cleaned <- plastics %>%
+  filter(!is.na(grand_total)) %>%
   group_by(country, year, volunteers) %>%
   summarize(total = sum(grand_total)) %>%
-  mutate(total_per_volunteer = total/volunteers) #normalize the total plastic by the number of volunteers that year
+  mutate(plastic_waste_total = sum(total), 
+         total_per_volunteer = total/volunteers) %>%
+  select(c("country", "total_per_volunteer", "plastic_waste_total"))
 
-#what is the overall change by country 
-pollution_change <- totals %>%
+world_map <- sf::st_as_sf(map('world', plot = FALSE, fill = TRUE)) %>%
+  rename(country = ID)
+
+plastic_pollution_cleaned %>%
+  filter(year == "2019") %>%
+  pull(country) %>%
+  unique() %>%
+  length() #52 countries with data for 2019
+
+plastic_pollution_cleaned %>%
+  filter(year == "2020") %>%
+  pull(country) %>%
+  unique() %>%
+  length() #55 countries with data for 2020
+
+#what is the overall change in pollution from 2019-2020 by country 
+pollution_change <- plastics %>%
+  filter(!is.na(count_per_volunteer)) %>%
+  group_by(country, year) %>%
+  summarize(total_per_volunteer = sum(count_per_volunteer)) %>%
   pivot_wider(id_col = "country", 
               names_from = "year", 
               values_from = "total_per_volunteer") %>%
@@ -42,52 +73,98 @@ pollution_change <- totals %>%
   mutate(difference = (`2020` - `2019`)) %>%
   mutate(color = (difference > 0))
 
-#we only have 38 countries where we have data for both 2019 and 2020
+pollution_change %>%
+  pull(country) %>%
+  unique() %>%
+  length()
+#note: we only have 41 countries where we have data for both 2019 and 2020
 
-
-#what about change from 2019 to 2020 by plastic type
-plastics_long <- plastics %>%
-  filter(parent_company != "Grand Total") %>%
-  select(!empty) %>%
-  pivot_longer(!c(country, year, parent_company, num_events, volunteers), 
+#what about overall change from 2019 to 2020 by plastic type
+plastic_type_change <- plastics %>%
+  select(!c(count_per_volunteer, parent_company, num_events)) %>%
+  pivot_longer(!c(country, year, volunteers), 
                names_to = "plastic_type", values_to = "count") %>%
   filter(plastic_type != "grand_total") %>%
-  na.omit() %>%
   mutate(count_per_volunteer = count/volunteers) %>% #gotta normalize
   mutate(year = factor(year)) %>%
-  filter(plastic_type != "o") %>%
   mutate(plastic_type = fct_recode(plastic_type, 
                                    "Polystyrene" = "ps",
                                    "High density polyethylene" = "hdpe",
                                    "Low density polyethylene" = "ldpe",
                                    "Polyester" = "pet", 
                                    "Polypropylene" = "pp",
-                                   "PVC" = "pvc"))
-
-
+                                   "PVC" = "pvc",
+                                   "Other" = "o")) %>%
+  filter(!is.na(count_per_volunteer)) %>%
+  group_by(year, plastic_type) %>%
+  summarize(total_per_volunteer = sum(count_per_volunteer)) %>%
+  pivot_wider(id_col = "plastic_type", 
+              names_from = "year", 
+              values_from = "total_per_volunteer") %>%
+  mutate(difference = (`2020` - `2019`))
 ```
+
+Text description here!
+Index of pollution: 
+$count per volunteer = \frac{plastic count}{number of volunteers}$
 
 Row {.tabset .tabset-fade}
------------------------------------------------------------------------
+-------------------------------------
 
-### World map of pollution 
+### World map of plastic pollution in 2019
 
 ```{r}
+plastic_pollution_cleaned %>%
+  filter(year == "2019") %>%
+  right_join(world_map, by = "country") %>%
+  st_as_sf() %>%
+  ggplot() + 
+  geom_sf(aes(fill = total_per_volunteer)) +
+  # scale_fill_viridis_c(na.value = "white") +
+  scale_fill_gradient(high = "#E64B3599",
+                      low = "#4DBBD599",
+                      na.value = "white") +
+  theme_classic() +
+  theme(legend.position = "bottom") +
+  labs(title = "Global plastic pollution in 2019", 
+       subtitle = "Data collected by volunteers in 52 countries",
+       fill = "Pieces of plastic\nper volunteer")
+```
 
+### World map of plastic pollution in 2020
+
+```{r}
+plastic_pollution_cleaned %>%
+  filter(year == "2020") %>%
+  right_join(world_map, by = "country") %>%
+  st_as_sf() %>%
+  ggplot() + 
+  geom_sf(aes(fill = total_per_volunteer)) +
+  # scale_fill_viridis_c(na.value = "white") +
+  scale_fill_gradient(high = "#E64B3599",
+                      low = "#4DBBD599",
+                      na.value = "white") +
+  theme_classic() +
+  theme(legend.position = "bottom") +
+  labs(title = "Global plastic pollution in 2020", 
+       subtitle = "Data collected by volunteers in 56 countries",
+       fill = "Pieces of plastic\nper volunteer")
 ```
 
 
 -----------------------------------------------------------------------
 
-### Plastic Pollution by Company
+### Plastic pollution by parent company
 
 ```{r}
 plastic_companies <- plastics %>%
   select(year, parent_company, grand_total) %>%
   filter(parent_company != "Grand Total") %>%
+  #filter(year == "2019") %>%
   filter(parent_company != "null") %>%
   filter(parent_company != "NULL") %>%
   filter(parent_company != "Unbranded") %>%
+  filter(parent_company != "#ERROR!") %>%
   na.omit() %>%
   group_by(year, parent_company) %>%
   summarise(ggrand = sum(grand_total)) %>%
@@ -98,11 +175,11 @@ plastic_companies <- plastics %>%
   pivot_wider(id_cols = "Company",
               names_from = "year",
               values_from = "Total") %>%
-  datatable(options = list(pagelength = 12), caption = "Total Collected Pieces of Plastic Pollution per Top 20 Companies in 2019")
+  datatable(options = list(pagelength = 12), caption = "Total Collected Pieces of Plastic Pollution by Parent Company in 2019 and 2020")
 plastic_companies
 ```
 
-### Change in pollution from 2019-2020 by country
+### Change in plastic pollution from 2019 to 2020
 
 ```{r}
 p <- pollution_change %>%
@@ -110,28 +187,25 @@ p <- pollution_change %>%
   geom_point(aes(x = difference, 
                  y = reorder(country, difference),
                  color = color)) +
-  scale_color_brewer(palette = "Paired") +
-  # scale_color_manual(values = c("orange", "blue")) +
+  # scale_color_brewer(palette = "Pastel1") +
+  scale_color_manual(values = c("#4DBBD599", "#E64B3599")) +
   geom_segment(aes(y = country, yend = country,
                    x = 0, xend = difference)) +
-  labs(y = "", x = "Change in pollution from 2019 to 2020 \n(pieces of plastic per volunteer)") +
+  labs(y = "", 
+       x = "Change in pollution from 2019 to 2020 \n(pieces of plastic per volunteer)") +
   theme_classic() +
   theme(legend.position = "none")
 
-p
-```
+p2 <- plastic_type_change %>%
+  ggplot() +
+  geom_bar(aes(x = difference, 
+                 y = reorder(plastic_type, difference)), 
+           fill = "#E64B3599", stat = "identity") +
+  labs(y = "", x = "Change in pollution \nby plastic type") +
+  theme_bw() +
+  theme(legend.position = "none")
 
-### Change in pollution from 2019-2020 by plastic type
-
-```{r}
-p2 <- ggplot(plastics_long) +
-  geom_col(aes(y = plastic_type,
-               x = count_per_volunteer, 
-               fill = year), position = "dodge") +
-  scale_fill_brewer(palette = "Paired") +
-  labs(y = "", x = "Pieces of plastic per volunteer") +
-  theme_classic()
-
-p2
+ggdraw(p) +
+  draw_plot(p2, .5, .2, .5, .5)
 ```
 
