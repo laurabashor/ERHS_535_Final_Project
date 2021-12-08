@@ -76,4 +76,84 @@ ggplot(plastic_pollution_map, aes(long, lat, group = group))+
   scale_fill_gradient(high ="red", low = "lightblue", na.value = "white") +
   theme_classic() +
   theme(legend.position = "bottom")
-  
+
+
+
+plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
+
+plastics <- plastics %>%
+  mutate(count_per_volunteer = (grand_total / volunteers)) %>% #normalize plastic totals by the number of volunteers
+  select(!empty) %>% #don't need this column-- it's meaning is unclear
+  filter(parent_company != "Grand Total") %>% #we can calculate these totals ourselves, not in the company column
+  mutate(country = str_to_title(country)) #clean up country names 
+
+#UK has two different names, fix this & fix all the other country names that conflict
+plastics["country"][plastics["country"] == "United Kingdom Of Great Britain & Northern Ireland"] <- "United Kingdom"
+plastics["country"][plastics["country"] == "United States Of America"] <- "USA"
+plastics["country"][plastics["country"] == "Cote D_ivoire"] <- "Ivory Coast"
+plastics["country"][plastics["country"] == "Taiwan_ Republic Of China (Roc)"] <- "Taiwan"
+plastics["country"][plastics["country"] == "United Kingdom"] <- "UK"
+
+#clean up data for mapping
+plastic_pollution_cleaned <- plastics %>%
+  filter(!is.na(grand_total)) %>%
+  group_by(country, year, volunteers) %>%
+  summarize(total = sum(grand_total)) %>%
+  mutate(plastic_waste_total = sum(total), 
+         total_per_volunteer = total/volunteers) %>%
+  select(c("country", "total_per_volunteer", "plastic_waste_total"))
+
+world_map <- sf::st_as_sf(map('world', plot = FALSE, fill = TRUE)) %>%
+  rename(country = ID)
+
+plastic_pollution_cleaned %>%
+  filter(year == "2019") %>%
+  pull(country) %>%
+  unique() %>%
+  length() #52 countries with data for 2019
+
+plastic_pollution_cleaned %>%
+  filter(year == "2020") %>%
+  pull(country) %>%
+  unique() %>%
+  length() #55 countries with data for 2020
+
+plastic_pollution_cleaned %>%
+  filter(year == "2019") %>%
+  right_join(world_map, by = "country") %>%
+  st_as_sf() %>%
+  ggplot() + 
+  geom_sf(aes(fill = total_per_volunteer)) +
+  # scale_fill_viridis_c(na.value = "white") +
+  scale_fill_gradient(high = "#E64B3599",
+                      low = "#4DBBD599",
+                      na.value = "white") +
+  theme_classic() +
+  theme(legend.position = "bottom") +
+  labs(title = "Global plastic pollution in 2019", 
+       subtitle = "Data collected by volunteers in 52 countries",
+       fill = "Pieces of plastic\nper volunteer")
+
+library(leaflet)
+library(mapview)
+
+plastic_pollution_cleaned %>%
+  filter(year == "2019") %>%
+  right_join(world_map, by = "country") %>%
+  st_as_sf() %>%
+  mapview(zcol = "plastic_waste_total")
+
+pal <- colorNumeric(
+  palette = "Blues",
+  na.color = "grey",
+  domain = plastic_pollution_cleaned$total_per_volunteer)
+
+plastic_pollution_cleaned %>%
+  filter(year == "2019") %>%
+  right_join(world_map, by = "country") %>%
+  st_as_sf() %>%
+  leaflet() %>%
+  addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1,
+              color = ~pal(total_per_volunteer))
+
+

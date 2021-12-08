@@ -16,6 +16,7 @@ library(DT)
 library(cowplot)
 library(sf)
 library(maps)
+library(plotly)
 
 plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
 ```
@@ -107,7 +108,7 @@ Index of pollution:
 $count per volunteer = \frac{plastic count}{number of volunteers}$
 
 Row {.tabset .tabset-fade}
------------------------------------------------------------------------
+-------------------------------------
 
 ### World map of plastic pollution in 2019
 
