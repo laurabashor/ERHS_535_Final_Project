@@ -8,6 +8,7 @@ output:
     orientation: columns
     vertical_layout: fill
 ---
+Plastic pollution data
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
