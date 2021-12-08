@@ -61,3 +61,22 @@ sort(grand_total, descending = TRUE) %>%
 
 
 
+##############################
+
+
+
+
+head(plastic_companies)
+
+yr_plast_nin <- plastics %>%
+  filter(year == "2019")
+
+yr_plast_tw <- plastics %>%
+  filter(year == "2020")
+
+#make column for 2019 and 2020 and difference
+#coord_sf
+#index
+#copy 
+
+

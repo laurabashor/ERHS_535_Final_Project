@@ -84,7 +84,6 @@ Row {.tabset .tabset-fade}
 ```{r}
 plastic_companies <- plastics %>%
   select(year, parent_company, grand_total) %>%
-  #filter(year == "2019") %>%
   filter(parent_company != "Grand Total") %>%
   filter(parent_company != "null") %>%
   filter(parent_company != "NULL") %>%
@@ -99,6 +98,7 @@ plastic_companies <- plastics %>%
   pivot_wider(id_cols = "Company",
               names_from = "year",
               values_from = "Total") %>%
+  mutate(Difference = ("2019" / "2020")) %>%
   datatable(options = list(pagelength = 12), caption = "Total Collected Pieces of Plastic Pollution per Top 20 Companies in 2019")
 plastic_companies
 ```
