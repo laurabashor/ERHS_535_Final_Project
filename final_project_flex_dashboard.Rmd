@@ -18,7 +18,6 @@ library(dplyr)
 library(cowplot)
 library(sf)
 library(maps)
-library(plotly)
 
 plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
 ```
@@ -106,9 +105,8 @@ Column {.tabset .tabset-fade}
 -------------------------------------
 
 ### World maps of plastic pollution in 2019 and 2020
-```{r}
+```{r, fig.width = 6, fig.height = 4}
 plastic_pollution_cleaned %>%
-  ungroup() %>%
   right_join(world_map, by = "country") %>%
   st_as_sf() %>%
   na.omit() %>%

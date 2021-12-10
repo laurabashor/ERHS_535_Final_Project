@@ -136,6 +136,7 @@ plastic_pollution_cleaned %>%
 
 library(leaflet)
 library(mapview)
+library(leafsync)
 
 plastic_pollution_cleaned %>%
   filter(year == "2019") %>%
@@ -145,10 +146,15 @@ plastic_pollution_cleaned %>%
 
 pal <- colorNumeric(
   palette = "Blues",
-  na.color = "grey",
+  na.color = "white",
   domain = plastic_pollution_cleaned$total_per_volunteer)
 
-plastic_pollution_cleaned %>%
+pal <- colorNumeric(
+  palette = c("#4DBBD599", "#E64B3599"),
+  na.color = "white",
+  domain = plastic_pollution_cleaned$total_per_volunteer)
+
+p2019 <- plastic_pollution_cleaned %>%
   filter(year == "2019") %>%
   right_join(world_map, by = "country") %>%
   st_as_sf() %>%
@@ -156,4 +162,12 @@ plastic_pollution_cleaned %>%
   addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1,
               color = ~pal(total_per_volunteer))
 
+p2020 <- plastic_pollution_cleaned %>%
+  filter(year == "2020") %>%
+  right_join(world_map, by = "country") %>%
+  st_as_sf() %>%
+  leaflet() %>%
+  addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1,
+              color = ~pal(total_per_volunteer))
 
+latticeview(p2019, p2020, sync = "all")
