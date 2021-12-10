@@ -5,10 +5,9 @@ output:
     theme: 
       version: 4
       bootswatch: journal
-    orientation: columns
     vertical_layout: fill
+    orientation: columns
 ---
-Plastic pollution data
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
@@ -52,16 +51,9 @@ world_map <- sf::st_as_sf(map('world', plot = FALSE, fill = TRUE)) %>%
   rename(country = ID)
 
 plastic_pollution_cleaned %>%
-  filter(year == "2019") %>%
   pull(country) %>%
   unique() %>%
-  length() #52 countries with data for 2019
-
-plastic_pollution_cleaned %>%
-  filter(year == "2020") %>%
-  pull(country) %>%
-  unique() %>%
-  length() #55 countries with data for 2020
+  length() #66 different countries (#52 in 2019, 55 in 2020)
 
 #what is the overall change in pollution from 2019-2020 by country 
 pollution_change <- plastics %>%
@@ -106,55 +98,32 @@ plastic_type_change <- plastics %>%
   mutate(difference = (`2020` - `2019`))
 ```
 
-Text description here! *Laura can do this
-Index of pollution: 
-$count per volunteer = \frac{ \mbox{ plastic count} {number of volunteers}$
+The data for this project come from [#breakfreefromplastic](https://www.breakfreefromplastic.org/). This group organizes citizen science plastic cleanup events around the world. Although their overall goal is to hold companies accountable for plastic waste, their datasets hold a wealth of additional information. In this dashboard, we investigate the distribution of plastic pollution by parent company, country, year and plastic type. Importantly, we calculated an "index of plastic pollution" that takes into account the amount of effort that went into a given cleanup event, as the number of participants affected the amount plastic that was collected. This allows us to compare pollution across all of the variables in the dataset.
 
-Row {.tabset .tabset-fade}
+$\text{count per volunteer} = \frac{\text{plastic count}_{}}{\text{number of volunteers}_{}}$
+
+Column {.tabset .tabset-fade}
 -------------------------------------
 
-### World map of plastic pollution in 2019
-
+### World maps of plastic pollution in 2019 and 2020
 ```{r}
 plastic_pollution_cleaned %>%
-  filter(year == "2019") %>%
+  ungroup() %>%
   right_join(world_map, by = "country") %>%
   st_as_sf() %>%
+  na.omit() %>%
   ggplot() + 
+  geom_sf(data = world_map, fill = "white") + 
   geom_sf(aes(fill = total_per_volunteer)) +
-  # scale_fill_viridis_c(na.value = "white") +
   scale_fill_gradient(high = "#E64B3599",
-                      low = "#4DBBD599",
-                      na.value = "white") +
+                      low = "#4DBBD599") +
   theme_classic() +
   theme(legend.position = "bottom") +
-  labs(title = "Global plastic pollution in 2019", 
-       subtitle = "Data collected by volunteers in 52 countries",
-       fill = "Pieces of plastic\nper volunteer")
+  labs(title = "Global plastic pollution", 
+       subtitle = "Data collected by volunteers in 66 countries",
+       fill = "Pieces of plastic\nper volunteer") +
+  facet_wrap(~year)
 ```
-
-### World map of plastic pollution in 2020
-
-```{r}
-plastic_pollution_cleaned %>%
-  filter(year == "2020") %>%
-  right_join(world_map, by = "country") %>%
-  st_as_sf() %>%
-  ggplot() + 
-  geom_sf(aes(fill = total_per_volunteer)) +
-  # scale_fill_viridis_c(na.value = "white") +
-  scale_fill_gradient(high = "#E64B3599",
-                      low = "#4DBBD599",
-                      na.value = "white") +
-  theme_classic() +
-  theme(legend.position = "bottom") +
-  labs(title = "Global plastic pollution in 2020", 
-       subtitle = "Data collected by volunteers in 56 countries",
-       fill = "Pieces of plastic\nper volunteer")
-```
-
-
------------------------------------------------------------------------
 
 ### Plastic pollution by parent company
 
@@ -191,6 +160,7 @@ plastic_companies <- plastics %>%
   datatable(options = list(pagelength = 12), caption = "Total Collected Pieces of Plastic Pollution by Parent Company in 2019 and 2020")
 plastic_companies
 ```
+
 
 ### Change in plastic pollution from 2019 to 2020
 
