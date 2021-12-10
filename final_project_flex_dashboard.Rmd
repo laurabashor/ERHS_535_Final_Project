@@ -159,12 +159,17 @@ plastic_pollution_cleaned %>%
 ### Plastic pollution by parent company
 
 ```{r}
-x <- plastics
+#Trying to fuzzy join
+x <- plastics %>%
+  select(year, parent_company)
 y <- plastics
 
+fuzzy_plastic <- plastics %>%
+  select(year, parent_company) %>%
+  fuzzy_full_join(x, y, by = c("parent_company" = "parent_company"), match_fun = list(`==`))
 
 
-
+#Original code for parent company table
 plastic_companies <- plastics %>%
   select(year, parent_company, grand_total) %>%
   filter(parent_company != "Grand Total") %>%
