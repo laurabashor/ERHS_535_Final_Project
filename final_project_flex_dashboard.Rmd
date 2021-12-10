@@ -135,8 +135,8 @@ y <- plastics
 
 fuzzy_plastic <- plastics %>%
   select(year, parent_company) %>%
-  fuzzy_full_join(x, y, by = c("parent_company" = "parent_company"), match_fun = list(`==`))
-
+  fuzzy_join(x, y, by = "parent_company", multi_match_fun = NULL, index_match_fun = NULL, match_fun = NULL)
+fuzzy_full_join(x, y, by = c("parent_company" = "parent_company"), match_fun = list(`==`))
 
 #Original code for parent company table
 plastic_companies <- plastics %>%
