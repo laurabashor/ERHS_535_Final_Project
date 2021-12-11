@@ -128,19 +128,22 @@ plastic_pollution_cleaned %>%
 ```{r}
 #Trying to fuzzy join
 x <- plastics %>%
-  select(year, parent_company)
+  select(parent_company)
 y <- plastics
 
-fuzzy_plastic <- plastics %>%
-  select(year, parent_company) %>%
-  fuzzy_join(x, y, by = "parent_company", multi_match_fun = NULL, index_match_fun = NULL, match_fun = NULL)
-fuzzy_full_join(x, y, by = c("parent_company" = "parent_company"), match_fun = list(`==`))
+# y %>%
+# stringdist_inner_join(y, by = c(parent_company = "approximate_name"))
+
+###########################Fuzzy
+#  fuzzy_plastic <- plastics %>%
+#  select(year, parent_company) %>%
+#  fuzzy_join(x, y, by = c("parent_company" = "parent_company"), match_fun = list(`==`, `<`, `>`))
+#########################Fuzzy
 
 #Original code for parent company table
 plastic_companies <- plastics %>%
   select(year, parent_company, grand_total) %>%
   filter(parent_company != "Grand Total") %>%
-  #filter(year == "2019") %>%
   filter(parent_company != "null") %>%
   filter(parent_company != "NULL") %>%
   filter(parent_company != "Unbranded") %>%
