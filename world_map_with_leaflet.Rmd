@@ -9,10 +9,20 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Load libraries
+# libraries
 
 ```{r}
+library(readr)
 library(geojsonsf)
+library(flexdashboard)
+library(tidyverse)
+library(DT)
+library(fuzzyjoin)
+library(dplyr)
+library(cowplot)
+library(sf)
+library(maps)
+library(leaflet)
 ```
 
 ```{r}
