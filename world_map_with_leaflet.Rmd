@@ -1,0 +1,125 @@
+---
+title: "world_map_revised_with_leaflet"
+author: "Taru Dutt"
+date: "12/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load libraries
+
+```{r}
+library(geojsonsf)
+```
+
+```{r}
+# load data
+
+plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
+
+# load countries spatial data
+
+geojson_countries <- geojson_sf("https://datahub.io/core/geo-countries/r/countries.geojson")
+
+# replace NA values with 0
+plastics$grand_total <- plastics$grand_total %>%
+                        replace_na(0)
+
+country_yearly_totals <- plastics %>%
+  group_by(country, year) %>%
+  summarise(Total = sum(grand_total))
+
+# rename columns for merging purposes
+colnames(country_yearly_totals) <- c("ADMIN", "Year", "Total")
+
+# create grand total aggregates and volunteer count columns in seperate data frames
+
+# to be joined and read into to the leaflet map
+plastic_2019 <- country_yearly_totals %>%
+  filter(Year == "2019") %>%
+  select(-Year)
+
+colnames(plastic_2019) <- c("ADMIN","Total_2019")
+
+plastic_2020 <- country_yearly_totals %>%
+  filter(Year == "2020") %>%
+  select(-Year)
+colnames(plastic_2020) <- c("ADMIN","Total_2020")
+
+volunteers_2019 <- plastics %>%
+  filter(year == "2019") %>%
+  select(country,volunteers) %>%
+  distinct()
+colnames(volunteers_2019) <- c("ADMIN","Volunteers_2019")
+
+volunteers_2020 <- plastics %>%
+  filter(year == "2020") %>%
+  group_by(country, volunteers) %>%
+  select(country, volunteers) %>%
+  distinct()
+colnames(volunteers_2020) <- c("ADMIN","Volunteers_2020")
+
+# now merge the aggregated counts with the spatial data frame
+worldmap_data <- sp::merge(geojson_countries, plastic_2019, by = 'ADMIN')
+worldmap_data <- sp::merge(worldmap_data, plastic_2020, by = 'ADMIN')
+worldmap_data <- sp::merge(worldmap_data,  volunteers_2019, by = 'ADMIN')
+worldmap_data <- sp::merge(worldmap_data,volunteers_2020, by = 'ADMIN')
+
+```
+
+
+## make world map with leaflet
+
+```{r}
+mytext <- paste(
+  "Country: ", worldmap_data$ADMIN, 
+  "<br/> 2020 - Total Plastic: ", worldmap_data$Total_2020, "&emsp;Total Volunteers: ", worldmap_data$Volunteers_2020,
+  "<br/> 2019 - Total Plastic: ", worldmap_data$Total_2019, "&emsp;Total Volunteers: ", worldmap_data$Volunteers_2019,
+  sep = " "
+) %>%
+  lapply(htmltools::HTML)
+
+pal <- colorNumeric(palette="YlOrBr",
+                    domain = log(worldmap_data$Total_2020), n=5)
+
+
+leaflet(worldmap_data) %>%
+  addTiles() %>%
+  addPolygons(stroke = FALSE, 
+              smoothFactor = 0.3, 
+              label = mytext,
+              color = ~pal(log(worldmap_data$Total_2020)),
+              highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                  bringToFront = FALSE)) %>%
+  addLegend("bottomright", 
+            pal = pal, 
+            values = ~log(worldmap_data$Total_2020),
+            title = "Ln Total Plastic (2020)",
+            #labFormat = labelFormat(prefix = "$"),
+            opacity = 1)
+
+
+leaflet(worldmap_data) %>% 
+  addTiles()  %>% 
+  setView( lat=10, lng=0 , zoom=2) %>%
+  addPolygons( 
+    fillColor = ~pal(log(worldmap_data$Total_2020)), 
+    stroke=TRUE, 
+    fillOpacity = 0.9, 
+    color="white", 
+    weight=0.3,
+    label = mytext,
+    labelOptions = labelOptions( 
+      style = list("font-weight" = "normal", padding = "3px 8px"), 
+      textsize = "13px", 
+      direction = "auto"
+    )
+  ) %>%
+  addLegend( pal= pal, values= ~log(worldmap_data$Total_2020), opacity=0.9, title = "Total plastic pollution", position = "bottomleft" )
+
+ 
+```
+
