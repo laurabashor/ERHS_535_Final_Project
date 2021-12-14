@@ -167,7 +167,7 @@ leaflet(worldmap_data) %>%
       direction = "auto"
     )
   ) %>%
-  addLegend( pal= pal, values= ~log(worldmap_data$Total_2020), opacity=0.9, title = "Total plastic pollution (log scale)", position = "bottomleft" )
+  addLegend( pal= pal, values= ~log(worldmap_data$Total_2020), opacity=0.9, title = "Total plastic pollution (log10 scale)", position = "bottomleft" )
 ```
 
 ### Plastic pollution by parent company
