@@ -173,26 +173,19 @@ leaflet(worldmap_data) %>%
 ### Plastic pollution by parent company
 
 ```{r}
-#Trying to fuzzy join
-x <- plastics %>%
-  select(parent_company)
+###########################Fuzzy attempts
+#x <- plastics %>%
+#  select(parent_company)
+#y <- plastics#  fuzzy_plastic <- plastics %>%
 
-y <- plastics
-
-# y %>%
-# stringdist_inner_join(y, by = c(parent_company = "approximate_name"))
-
-#new <- stringdist_inner_join(y, x, by = "parent_company", distance_col = NULL)
-#idea <- fuzzy_join(x, y, by = "parent_company", match_fun = list(match_fun_stringdist, `==`, `<=`), mode = "left")
-
-###########################Fuzzy
-#  fuzzy_plastic <- plastics %>%
-#  select(year, parent_company) %>%
 #  fuzzy_join(x, y, by = "parent_company", match_fun = ))
 #  fuzzy_join(x, y, by = c("parent_company" = "parent_company"), match_fun = list(`==`, `<`, `>`))
-#########################Fuzzy
+#  stringdist_inner_join(y, by = c(parent_company = "approximate_name"))
+#  stringdist_inner_join(y, x, by = "parent_company", distance_col = NULL)
+#  fuzzy_join(x, y, by = "parent_company", match_fun = list(match_fun_stringdist, `==`, `<=`), mode = "left")
+#########################
 
-#Original code for parent company table
+#Interactive Table for companies and year
 plastic_companies <- plastics %>%
   select(year, parent_company, grand_total) %>%
   filter(parent_company != "Grand Total") %>%
