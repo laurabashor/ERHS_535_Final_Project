@@ -149,7 +149,7 @@ $\text{count per volunteer} = \frac{\text{plastic count}_{}}{\text{number of vol
 Column {.tabset .tabset-fade}
 -------------------------------------
 
-### World maps of plastic pollution in 2019 and 2020
+### World map of plastic pollution in 2019 and 2020
 ```{r}
 leaflet(worldmap_data) %>% 
   addTiles()  %>% 
@@ -217,7 +217,7 @@ plastic_companies
 
 ### Change in plastic pollution from 2019 to 2020
 
-```{r}
+```{r, fig.width = 7, fig.heigh = 6}
 p <- pollution_change %>%
   ggplot() +
   geom_point(aes(x = difference, 
@@ -239,9 +239,11 @@ p2 <- plastic_type_change %>%
            fill = "#E64B3599", stat = "identity") +
   labs(y = "", x = "Change in pollution \nby plastic type") +
   theme_bw() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 10),
+        axis.text = element_text(size = 8))
 
 ggdraw(p) +
-  draw_plot(p2, .5, .2, .5, .5)
+  draw_plot(p2, .5, .15, .5, .5)
 ```
 
