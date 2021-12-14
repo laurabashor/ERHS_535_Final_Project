@@ -17,7 +17,8 @@ library(fuzzyjoin)
 library(dplyr)
 library(cowplot)
 library(sf)
-library(maps)
+library(geojsonsf)
+library(leaflet)
 
 plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
 ```
@@ -32,27 +33,9 @@ plastics <- plastics %>%
 
 #UK has two different names, fix this & fix all the other country names that conflict
 plastics["country"][plastics["country"] == "United Kingdom Of Great Britain & Northern Ireland"] <- "United Kingdom"
-plastics["country"][plastics["country"] == "United States Of America"] <- "USA"
+plastics["country"][plastics["country"] == "United States Of America"] <- "United States of America"
 plastics["country"][plastics["country"] == "Cote D_ivoire"] <- "Ivory Coast"
 plastics["country"][plastics["country"] == "Taiwan_ Republic Of China (Roc)"] <- "Taiwan"
-plastics["country"][plastics["country"] == "United Kingdom"] <- "UK"
-  
-#clean up data for mapping
-plastic_pollution_cleaned <- plastics %>%
-  filter(!is.na(grand_total)) %>%
-  group_by(country, year, volunteers) %>%
-  summarize(total = sum(grand_total)) %>%
-  mutate(plastic_waste_total = sum(total), 
-         total_per_volunteer = total/volunteers) %>%
-  select(c("country", "total_per_volunteer", "plastic_waste_total"))
-
-world_map <- sf::st_as_sf(map('world', plot = FALSE, fill = TRUE)) %>%
-  rename(country = ID)
-
-plastic_pollution_cleaned %>%
-  pull(country) %>%
-  unique() %>%
-  length() #66 different countries (#52 in 2019, 55 in 2020)
 
 #what is the overall change in pollution from 2019-2020 by country 
 pollution_change <- plastics %>%
@@ -97,6 +80,68 @@ plastic_type_change <- plastics %>%
   mutate(difference = (`2020` - `2019`))
 ```
 
+```{r map prep, echo = FALSE, include = FALSE}
+geojson_countries <- geojson_sf("https://datahub.io/core/geo-countries/r/countries.geojson")
+
+# new df for this
+plastics_map <- plastics
+
+#replace NA values with 0
+plastics_map$grand_total <- plastics_map$grand_total %>%
+                        replace_na(0)
+
+country_yearly_totals <- plastics_map %>%
+  group_by(country, year) %>%
+  summarise(Total = sum(grand_total))
+
+# rename columns for merging purposes
+colnames(country_yearly_totals) <- c("ADMIN", "Year", "Total")
+
+# create grand total aggregates and volunteer count columns in seperate data frames
+
+# to be joined and read into to the leaflet map
+plastic_2019 <- country_yearly_totals %>%
+  filter(Year == "2019") %>%
+  select(-Year)
+
+colnames(plastic_2019) <- c("ADMIN","Total_2019")
+
+plastic_2020 <- country_yearly_totals %>%
+  filter(Year == "2020") %>%
+  select(-Year)
+colnames(plastic_2020) <- c("ADMIN","Total_2020")
+
+volunteers_2019 <- plastics_map %>%
+  filter(year == "2019") %>%
+  select(country,volunteers) %>%
+  distinct()
+colnames(volunteers_2019) <- c("ADMIN","Volunteers_2019")
+
+volunteers_2020 <- plastics_map %>%
+  filter(year == "2020") %>%
+  group_by(country, volunteers) %>%
+  select(country, volunteers) %>%
+  distinct()
+colnames(volunteers_2020) <- c("ADMIN","Volunteers_2020")
+
+# now merge the aggregated counts with the spatial data frame
+worldmap_data <- sp::merge(geojson_countries, plastic_2019, by = 'ADMIN')
+worldmap_data <- sp::merge(worldmap_data, plastic_2020, by = 'ADMIN')
+worldmap_data <- sp::merge(worldmap_data,  volunteers_2019, by = 'ADMIN')
+worldmap_data <- sp::merge(worldmap_data,volunteers_2020, by = 'ADMIN')
+
+mytext <- paste(
+  "Country: ", worldmap_data$ADMIN, 
+  "<br/> 2020 - Total Plastic: ", worldmap_data$Total_2020, "&emsp;Total Volunteers: ", worldmap_data$Volunteers_2020,
+  "<br/> 2019 - Total Plastic: ", worldmap_data$Total_2019, "&emsp;Total Volunteers: ", worldmap_data$Volunteers_2019,
+  sep = " "
+) %>%
+  lapply(htmltools::HTML)
+
+pal <- colorNumeric(palette= "YlOrBr",
+                    domain = log(worldmap_data$Total_2020), n=5)
+```
+
 The data for this project come from [#breakfreefromplastic](https://www.breakfreefromplastic.org/). This group organizes citizen science plastic cleanup events around the world. Although their overall goal is to hold companies accountable for plastic waste, their datasets hold a wealth of additional information. In this dashboard, we investigate the distribution of plastic pollution by parent company, country, year and plastic type. Importantly, we calculated an "index of plastic pollution" that takes into account the amount of effort that went into a given cleanup event, as the number of participants affected the amount plastic that was collected. This allows us to compare pollution across all of the variables in the dataset.
 
 $\text{count per volunteer} = \frac{\text{plastic count}_{}}{\text{number of volunteers}_{}}$
@@ -105,22 +150,24 @@ Column {.tabset .tabset-fade}
 -------------------------------------
 
 ### World maps of plastic pollution in 2019 and 2020
-```{r, fig.width = 6, fig.height = 4}
-plastic_pollution_cleaned %>%
-  right_join(world_map, by = "country") %>%
-  st_as_sf() %>%
-  na.omit() %>%
-  ggplot() + 
-  geom_sf(data = world_map, fill = "white") + 
-  geom_sf(aes(fill = total_per_volunteer)) +
-  scale_fill_gradient(high = "#E64B3599",
-                      low = "#4DBBD599") +
-  theme_classic() +
-  theme(legend.position = "bottom") +
-  labs(title = "Global plastic pollution", 
-       subtitle = "Data collected by volunteers in 66 countries",
-       fill = "Pieces of plastic\nper volunteer") +
-  facet_wrap(~year)
+```{r}
+leaflet(worldmap_data) %>% 
+  addTiles()  %>% 
+  setView( lat=10, lng=0 , zoom=2) %>%
+  addPolygons( 
+    fillColor = ~pal(log(worldmap_data$Total_2020)), 
+    stroke=TRUE, 
+    fillOpacity = 0.9, 
+    color="white", 
+    weight=0.3,
+    label = mytext,
+    labelOptions = labelOptions( 
+      style = list("font-weight" = "normal", padding = "3px 8px"), 
+      textsize = "13px", 
+      direction = "auto"
+    )
+  ) %>%
+  addLegend( pal= pal, values= ~log(worldmap_data$Total_2020), opacity=0.9, title = "Total plastic pollution", position = "bottomleft" )
 ```
 
 ### Plastic pollution by parent company

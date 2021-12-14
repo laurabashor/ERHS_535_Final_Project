@@ -171,3 +171,52 @@ p2020 <- plastic_pollution_cleaned %>%
               color = ~pal(total_per_volunteer))
 
 latticeview(p2019, p2020, sync = "all")
+
+
+### map that we replaced with Taru's map
+
+library(maps)
+
+# #clean up data for mapping
+# plastic_pollution_cleaned <- plastics %>%
+#   filter(!is.na(grand_total)) %>%
+#   group_by(country, year, volunteers) %>%
+#   summarize(total = sum(grand_total)) %>%
+#   mutate(plastic_waste_total = sum(total), 
+#          total_per_volunteer = total/volunteers) %>%
+#   select(c("country", "total_per_volunteer", "plastic_waste_total"))
+# 
+# world_map <- sf::st_as_sf(map('world', plot = FALSE, fill = TRUE)) %>%
+#   rename(country = ID)
+# 
+# plastic_pollution_cleaned %>%
+#   pull(country) %>%
+#   unique() %>%
+#   length() #66 different countries (#52 in 2019, 55 in 2020)
+
+# plastic_pollution_cleaned %>%
+#   right_join(world_map, by = "country") %>%
+#   st_as_sf() %>%
+#   na.omit() %>%
+#   ggplot() + 
+#   geom_sf(data = world_map, fill = "white") + 
+#   geom_sf(aes(fill = total_per_volunteer)) +
+#   scale_fill_gradient(high = "#E64B3599",
+#                       low = "#4DBBD599") +
+#   theme_classic() +
+#   theme(legend.position = "bottom") +
+#   labs(title = "Global plastic pollution", 
+#        subtitle = "Data collected by volunteers in 66 countries",
+#        fill = "Pieces of plastic\nper volunteer") +
+#   facet_wrap(~year)
+
+#UK has two different names, fix this & fix all the other country names that conflict
+plastics["country"][plastics["country"] == "United Kingdom Of Great Britain & Northern Ireland"] <- "United Kingdom"
+plastics["country"][plastics["country"] == "United States Of America"] <- "USA"
+plastics["country"][plastics["country"] == "Cote D_ivoire"] <- "Ivory Coast"
+plastics["country"][plastics["country"] == "Taiwan_ Republic Of China (Roc)"] <- "Taiwan"
+plastics["country"][plastics["country"] == "United Kingdom"] <- "UK"
+
+
+
+
