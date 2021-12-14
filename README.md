@@ -1,1 +1,5 @@
-# README.md
+This repository contains the code to create an interactive html dashboard for the final group project for Colorado State University ERHS 535 Fall 2021. 
+
+Authors: Laura Bashor, Margaret Patterson, Shekeira Bryan, and Taru S Dutt
+
+The data for this project come from https://github.com/rfordatascience/tidytuesday/tree/master/data/2021/2021-01-26 and https://www.breakfreefromplastic.org/. The #breakfreefromplastic movement organizes citizen science plastic cleanup events around the world. Although their overall goal is to hold companies accountable for plastic waste, their datasets hold a wealth of additional information. In this dashboard, we investigate the distribution of plastic pollution by parent company, country, year and plastic type. Importantly, we calculated an “index of plastic pollution” that takes into account the amount of effort that went into a given cleanup event, as the number of participants affected the amount plastic that was collected. This allows us to compare pollution across all of the variables in the dataset.
